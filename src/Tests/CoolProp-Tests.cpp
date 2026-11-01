@@ -8777,6 +8777,64 @@ TEST_CASE("INCOMP Chebyshev caloric fits: values, consistency and integrals", "[
         CHECK_NOTHROW(CoolProp::add_fluids_as_JSON("INCOMP", wide_range));
     }
 }
+/// Set INCOMP_CHECK_SATURATION_PRESSURE for one scope and restore the previous
+/// value on exit, also when an assertion throws, so no other test inherits it.
+struct SaturationPressureCheckSetting
+{
+    bool saved;
+    explicit SaturationPressureCheckSetting(bool value) : saved(CoolProp::get_config_bool(INCOMP_CHECK_SATURATION_PRESSURE)) {
+        CoolProp::set_config_bool(INCOMP_CHECK_SATURATION_PRESSURE, value);
+    }
+    ~SaturationPressureCheckSetting() {
+        CoolProp::set_config_bool(INCOMP_CHECK_SATURATION_PRESSURE, saved);
+    }
+    SaturationPressureCheckSetting(const SaturationPressureCheckSetting&) = delete;
+    SaturationPressureCheckSetting& operator=(const SaturationPressureCheckSetting&) = delete;
+    SaturationPressureCheckSetting(SaturationPressureCheckSetting&&) = delete;
+    SaturationPressureCheckSetting& operator=(SaturationPressureCheckSetting&&) = delete;
+};
+
+TEST_CASE("INCOMP saturation pressure check can be switched off", "[INCOMP]") {
+    // Constant saturation pressure of 2 bar, so p = 1 bar is below it for every T.
+    const std::string json = R"([{
+        "name": "CatchRuntimePsatFluid", "description": "x", "reference": "x",
+        "Tmin": 280.0, "Tmax": 360.0, "TminPsat": 270.0, "xid": "pure",
+        "density":             {"type": "polynomial", "coeffs": [[1000.0]]},
+        "specific_heat":       {"type": "polynomial", "coeffs": [[2000.0]]},
+        "saturation_pressure": {"type": "polynomial", "coeffs": [[200000.0]]}
+    }])";
+    REQUIRE_NOTHROW(CoolProp::add_fluids_as_JSON("INCOMP", json));
+    const std::string fluid = "INCOMP::CatchRuntimePsatFluid";
+    const double p_below = 1.0e5, p_above = 3.0e5;
+
+    SECTION("Enabled by default: a state below psat is rejected") {
+        const SaturationPressureCheckSetting setting(true);
+        CHECK_FALSE(ValidNumber(CoolProp::PropsSI("D", "T", 320.0, "P", p_below, fluid)));
+        CHECK(CoolProp::get_global_param_string("errstring").find("liquid phase only") != std::string::npos);
+        CHECK(CoolProp::PropsSI("D", "T", 320.0, "P", p_above, fluid) == Catch::Approx(1000.0).epsilon(1e-12));
+    }
+    SECTION("Disabled: liquid properties at any pressure, psat still available") {
+        const SaturationPressureCheckSetting setting(false);
+        CHECK(CoolProp::PropsSI("D", "T", 320.0, "P", p_below, fluid) == Catch::Approx(1000.0).epsilon(1e-12));
+        CHECK(CoolProp::PropsSI("D", "T", 320.0, "P", p_above, fluid) == Catch::Approx(1000.0).epsilon(1e-12));
+        CHECK(CoolProp::PropsSI("P", "T", 320.0, "Q", 0.0, fluid) == Catch::Approx(200000.0).epsilon(1e-12));
+    }
+    SECTION("Takes effect on an existing AbstractState and through the JSON configuration route") {
+        const SaturationPressureCheckSetting setting(true);
+        std::unique_ptr<CoolProp::AbstractState> state(CoolProp::AbstractState::factory("INCOMP", "CatchRuntimePsatFluid"));
+        CHECK_THROWS(state->update(CoolProp::PT_INPUTS, p_below, 320.0));
+        CoolProp::set_config_as_json_string(R"({"INCOMP_CHECK_SATURATION_PRESSURE": false})");
+        CHECK_FALSE(CoolProp::get_config_bool(INCOMP_CHECK_SATURATION_PRESSURE));
+        CHECK_NOTHROW(state->update(CoolProp::PT_INPUTS, p_below, 320.0));
+        CHECK(state->rhomass() == Catch::Approx(1000.0).epsilon(1e-12));
+    }
+    SECTION("Other checks stay active when the saturation check is off") {
+        const SaturationPressureCheckSetting setting(false);
+        CHECK_FALSE(ValidNumber(CoolProp::PropsSI("D", "T", 400.0, "P", p_above, fluid)));  // above Tmax
+        CHECK_FALSE(ValidNumber(CoolProp::PropsSI("D", "T", 320.0, "P", -1.0, fluid)));     // negative pressure
+    }
+}
+
 /// Set INCOMP_PREFER_CHEBYSHEV_CALORIC for one scope and restore the previous
 /// value on exit, also when an assertion throws, so no other test inherits it.
 struct ChebyshevCaloricSetting

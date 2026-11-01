@@ -840,10 +840,12 @@ bool IncompressibleFluid::checkT(double T, double p, double x) {
  *  the saturation conditions.
  *  The default value for psat is -1 yielding true if psat
  *  is not redefined in the subclass.
+ *  The saturation comparison is skipped when the configuration key
+ *  INCOMP_CHECK_SATURATION_PRESSURE is false.
  *  */
 bool IncompressibleFluid::checkP(double T, double p, double x) {
     double ps = 0.0;
-    if (p_sat.type != IncompressibleData::INCOMPRESSIBLE_NOT_SET) {
+    if (p_sat.type != IncompressibleData::INCOMPRESSIBLE_NOT_SET && get_config_bool(INCOMP_CHECK_SATURATION_PRESSURE)) {
         // psat() now throws below TminPsat (#2209). For this validation
         // path, T below TminPsat means the saturation curve is not
         // available — there is nothing to compare p against, so skip

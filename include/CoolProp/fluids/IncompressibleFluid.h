@@ -535,6 +535,8 @@ class IncompressibleFluid
      *  the saturation conditions.
      *  The default value for psat is -1 yielding true if psat
      *  is not redefined in the subclass.
+     *  The saturation comparison is skipped when the configuration key
+     *  INCOMP_CHECK_SATURATION_PRESSURE is false.
      *  */
     bool checkP(double T, double p, double x);
 

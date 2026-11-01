@@ -345,6 +345,8 @@ class configuration_keys(enum.IntEnum):
 
     INCOMP_PREFER_CHEBYSHEV_CALORIC = 40
 
+    INCOMP_CHECK_SATURATION_PRESSURE = 41
+
 NORMALIZE_GAS_CONSTANTS: configuration_keys = configuration_keys.NORMALIZE_GAS_CONSTANTS
 
 CRITICAL_WITHIN_1UK: configuration_keys = configuration_keys.CRITICAL_WITHIN_1UK
@@ -426,6 +428,8 @@ SVDSBTL_SURFACE_CACHE_MAX_ENTRIES: configuration_keys = ...
 SVDSBTL_SURFACE_CACHE_MAX_SIZE_MB: configuration_keys = ...
 
 INCOMP_PREFER_CHEBYSHEV_CALORIC: configuration_keys = ...
+
+INCOMP_CHECK_SATURATION_PRESSURE: configuration_keys = ...
 
 class parameters(enum.IntEnum):
     igas_constant = 1

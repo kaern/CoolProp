@@ -111,7 +111,11 @@
       "If true (default), incompressible fluids evaluate density and specific heat (and so enthalpy and entropy) from their Chebyshev fits "         \
       "where the fluid data ships them.  If false, the classic polynomial fits are used instead, where the fluid data ships those.  Each "           \
       "incompressible AbstractState reads this setting once, when it is created, so change it before creating the states it should apply to; "       \
-      "PropsSI creates a new state on every call and so follows the setting immediately.")
+      "PropsSI creates a new state on every call and so follows the setting immediately.")                                                           \
+    X(INCOMP_CHECK_SATURATION_PRESSURE, "INCOMP_CHECK_SATURATION_PRESSURE", true,                                                                    \
+      "If true (default), an incompressible fluid that ships a saturation pressure fit rejects states with p below that saturation pressure "        \
+      "(\"Equations are valid for liquid phase only\").  If false, the check is skipped and the liquid properties are returned at any pressure; "    \
+      "the saturation pressure itself is still available (Q=0 inputs).  Takes effect immediately, also for existing AbstractState objects.")
 
 // Use preprocessor to create the Enum
 enum configuration_keys

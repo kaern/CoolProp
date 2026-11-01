@@ -386,6 +386,23 @@ were computed from the selected fits. Change the setting before creating the
 states it should apply to. ``PropsSI`` creates a new state on every call, so it
 follows the setting immediately.
 
+Saturation pressure check
+-------------------------
+
+A fluid that ships a saturation pressure fit only accepts states with a pressure
+at or above the saturation pressure at that temperature, because the fits describe
+the liquid phase. Lower pressures raise "Equations are valid for liquid phase only".
+If you want the liquid properties at any pressure, set the configuration key
+``INCOMP_CHECK_SATURATION_PRESSURE`` to false. The saturation pressure itself stays
+available through ``Q=0`` inputs, and the temperature and composition checks are
+not affected. The setting is read at every update, so it also applies to existing
+``AbstractState`` objects.
+
+.. code-block:: python
+
+    import CoolProp.CoolProp as CP
+    CP.set_config_bool(CP.INCOMP_CHECK_SATURATION_PRESSURE, False)
+
 .. _Equations:
 
 Equations
