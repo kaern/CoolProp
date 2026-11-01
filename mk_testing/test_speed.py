@@ -6,12 +6,14 @@ import numpy as np
 
 if __name__ == "__main__":
     n = int(1e6)
-    plot = True
+    plot = False
     # remove_chebs = True
 
     CP.set_config_bool(CP.INCOMP_PREFER_CHEBYSHEV_CALORIC, False)
+    CP.set_config_bool(CP.INCOMP_CHECK_SATURATION_PRESSURE, False)
 
     FLUIDS_STRING = ["MEG[0.35]", "Water"]
+    FLUIDS_STRING = ["Water"]
 
     FLUIDS = [f.split("[")[0] for f in FLUIDS_STRING]
 
@@ -37,7 +39,7 @@ if __name__ == "__main__":
         print(f"\nStarting CoolProp test: {fld_string}")
         print("-" * 40)
 
-        T = np.linspace(300, 350, n)
+        T = np.linspace(300, 450, n)
         fluid.update(CP.PT_INPUTS, 1e5, T[0])
         h1, s1 = fluid.hmass(), fluid.smass()
         fluid.update(CP.PT_INPUTS, 1e5, T[-1])
